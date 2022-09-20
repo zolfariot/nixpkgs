@@ -267,7 +267,6 @@ lvm vgchange -ay
 if test -n "$debug1devices"; then fail; fi
 
 
-@postDeviceCommands@
 
 
 # Check the specified file system, if appropriate.
@@ -483,6 +482,8 @@ if test -e /sys/power/resume -a -e /sys/power/disk; then
         echo "$resumeMajor:$resumeMinor" > /sys/power/resume 2> /dev/null || echo "failed to resume..."
     fi
 fi
+
+@postDeviceCommands@
 
 # If we have a path to an iso file, find the iso and link it to /dev/root
 if [ -n "$isoPath" ]; then
