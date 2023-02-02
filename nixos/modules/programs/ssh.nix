@@ -310,6 +310,8 @@ in
           XAuthLocation ${pkgs.xorg.xauth}/bin/xauth
         ''}
 
+        EnableEscapeCommandline yes
+
         ForwardX11 ${if cfg.forwardX11 then "yes" else "no"}
 
         ${optionalString (cfg.pubkeyAcceptedKeyTypes != []) "PubkeyAcceptedKeyTypes ${concatStringsSep "," cfg.pubkeyAcceptedKeyTypes}"}
