@@ -294,17 +294,6 @@ with lib.maintainers; {
     githubTeams = [ "flutter" ];
   };
 
-  flyingcircus = {
-    # Verify additions by approval of an already existing member of the team.
-    members = [
-      ctheune
-      dpausp
-      leona
-    ];
-    scope = "Team for Flying Circus employees who collectively maintain packages.";
-    shortName = "Flying Circus employees";
-  };
-
   freedesktop = {
     members = [ jtojnar ];
     scope = "Maintain Freedesktop.org packages for graphical desktop.";
