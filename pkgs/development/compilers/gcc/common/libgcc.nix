@@ -74,6 +74,12 @@ in
 
 (pkg: pkg.overrideAttrs (previousAttrs: lib.optionalAttrs ((!langC) || langJit || enableLibGccOutput) {
   outputs = previousAttrs.outputs ++ lib.optionals enableLibGccOutput [ "libgcc" ];
+
+  # Otherwise the plugins don't load, since strip removes marker symbols and you
+  # get errors like:
+  # cc1: fatal error: plugin /nix/store/h5kvfrjmpw792v8jg7nrzfkffmn0iyy8-gcc-12.3.0/libexec/gcc/x86_64-unknown-linux-gnu/12.3.0/liblto_plugin.so is not licensed under a GPL-compatible license /nix/store/h5kvfrjmpw792v8jg7nrzfkffmn0iyy8-gcc-12.3.0/libexec/gcc/x86_64-unknown-linux-gnu/12.3.0/liblto_plugin.so: undefined symbol: plugin_is_GPL_compatible
+  stripExclude = [ "libexec/gcc/*/*/liblto_plugin.*" ];
+
   # This is a separate phase because gcc assembles its phase scripts
   # in bash instead of nix (we should fix that).
   preFixupPhases = (previousAttrs.preFixupPhases or []) ++ lib.optionals ((!langC) || enableLibGccOutput) [ "preFixupLibGccPhase" ];
