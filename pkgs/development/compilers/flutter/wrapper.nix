@@ -52,7 +52,7 @@ let
         inherit flutterPlatform;
         systemPlatform = stdenv.hostPlatform.system;
         flutter = callPackage ./wrapper.nix { inherit flutter; };
-        hash = artifactHashes.${flutterPlatform}.${stdenv.hostPlatform.system} or "";
+        hash = artifactHashes.${flutterPlatform}.${if stdenv.hostPlatform.system == "aarch64-darwin" then "x86_64-darwin" else stdenv.hostPlatform.system} or "";
       };
     }));
 
