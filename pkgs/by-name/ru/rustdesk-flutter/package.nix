@@ -126,12 +126,13 @@ in flutter313.buildFlutterApplication rec {
     libaom
     libopus
     libpulseaudio
-    libva
     libvdpau
     libvpx
     libxkbcommon
     libyuv
     xdotool
+  ] ++ lib.optionals rustc.unwrapped.stdenv.isLinux [
+    libva
   ];
 
   postPatch = ''
@@ -209,6 +210,6 @@ in flutter313.buildFlutterApplication rec {
     license = licenses.agpl3Only;
     maintainers = with maintainers; [ das_j ];
     mainProgram = "rustdesk";
-    platforms = platforms.linux; # should work on darwin as well but I have no machine to test with
+    platforms = platforms.all;
   };
 }
