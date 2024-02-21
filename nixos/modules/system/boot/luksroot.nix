@@ -1108,12 +1108,19 @@ in
             ];
             wants = [ "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
             after = [ "systemd-modules-load.service" "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
-            script = ''
-              mkdir -p /clevis-${name}
-              mount -t ramfs none /clevis-${name}
-              umask 277
-              clevis decrypt < /etc/clevis/${name}.jwe > /clevis-${name}/decrypted
-            '';
+            script =
+              if (clevis.devices.${device}.bound)
+              then
+                ''
+                  clevis unlock -d ${device} -n ${name};
+                ''
+              else
+                ''
+                  mkdir -p /clevis-${name}
+                  mount -t ramfs none /clevis-${name}
+                  umask 277
+                  clevis decrypt < /etc/clevis/${name}.jwe > /clevis-${name}/decrypted
+                '';
             conflicts = [ "initrd-switch-root.target" "shutdown.target" ];
             unitConfig.DefaultDependencies = "no";
             serviceConfig = {
