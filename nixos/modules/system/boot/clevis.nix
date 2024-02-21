@@ -90,13 +90,18 @@ in
         sed -i $out/bin/clevis-decrypt-tpm2 -e 's,tpm2_,tpm2 ,'
       '';
 
-      secrets = lib.mapAttrs' (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile) cfg.devices;
+      secrets = lib.mapAttrs'
+        (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile)
+        (filterAttrs (n: v: !v.bound) cfg.devices);
 
       systemd = {
         extraBin = mkIf systemd.enable {
           clevis = "${cfg.package}/bin/clevis";
           cryptsetup = "${pkgs.cryptsetup}/bin/cryptsetup";
           curl = "${pkgs.curl}/bin/curl";
+          grep = "${pkgs.gnugrep}/bin/grep";
+          luksmeta = "${pkgs.luksmeta}/bin/luksmeta";
+          sed = "${pkgs.gnused}/bin/sed";
         };
 
         storePaths = mkIf systemd.enable [

@@ -1109,10 +1109,10 @@ in
             wants = [ "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
             after = [ "systemd-modules-load.service" "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
             script =
-              if (clevis.devices.${device}.bound)
+              if (clevis.devices.${name}.bound)
               then
                 ''
-                  clevis unlock -d ${device} -n ${name};
+                  clevis luks unlock -d ${luks.devices.${name}.device} -n ${name};
                 ''
               else
                 ''
