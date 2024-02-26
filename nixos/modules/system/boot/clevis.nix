@@ -86,9 +86,9 @@ in
         sed -i $out/bin/clevis-decrypt-tpm2 -e 's,tpm2_,tpm2 ,'
       '';
 
-      hasSecretFile = device: device ? "secretFile";
-      secretFileDevices = filterAttrs (name: device: hasSecretFile device) cfg.devices;
-      secrets = lib.mapAttrs' (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile) secretFileDevices;
+      secrets = lib.mapAttrs'
+        (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile)
+        (filterAttrs (name: value: value.secretFile != null) cfg.devices);
       #  (filterAttrs (n: v: (hasAttr "secretFile" v)) cfg.devices);
 
       systemd = {
