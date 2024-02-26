@@ -30,11 +30,6 @@ in
           description = lib.mdDoc "Clevis JWE file used to decrypt the device at boot, in concert with the chosen pin (one of TPM2, Tang server, or SSS).";
           type = types.path;
         };
-        options.bound = mkOption {
-          description = lib.mdDoc "Whether the device is directly bound to a Clevis policy, in that case secretFile is not required (only support LUKS devices).";
-          default = false;
-          type = types.bool;
-        };
       }));
     };
 
@@ -92,7 +87,7 @@ in
 
       secrets = lib.mapAttrs'
         (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile)
-        (filterAttrs (n: v: !v.bound) cfg.devices);
+        (filterAttrs (n: v: v ? "secretFile") cfg.devices);
 
       systemd = {
         extraBin = mkIf systemd.enable {

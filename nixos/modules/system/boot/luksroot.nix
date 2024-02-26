@@ -1109,17 +1109,17 @@ in
             wants = [ "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
             after = [ "systemd-modules-load.service" "systemd-udev-settle.service" ] ++ optional clevis.useTang "network-online.target";
             script =
-              if (clevis.devices.${name}.bound)
+              if (clevis.devices.${name} ? "secretFile")
               then
-                ''
-                  clevis luks unlock -d ${luks.devices.${name}.device} -n ${name};
-                ''
-              else
                 ''
                   mkdir -p /clevis-${name}
                   mount -t ramfs none /clevis-${name}
                   umask 277
                   clevis decrypt < /etc/clevis/${name}.jwe > /clevis-${name}/decrypted
+                ''
+              else
+                ''
+                  clevis luks unlock -d ${luks.devices.${name}.device} -n ${name};
                 '';
             conflicts = [ "initrd-switch-root.target" "shutdown.target" ];
             unitConfig.DefaultDependencies = "no";
