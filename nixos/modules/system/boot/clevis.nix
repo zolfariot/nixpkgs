@@ -58,8 +58,7 @@ in
         (name: device: {
           assertion = (device.secretFile != null) || (hasAttr name config.boot.initrd.luks.devices);
           message = ''
-            No clevis secretFile provided for ${name}, but ${name} is not LUKS and does not support
-            empty secretFile.'';
+            A secretFile must be declared for the non LUKS device with the name ${name}.'';
         })
         cfg.devices));
 
@@ -91,6 +90,12 @@ in
         done
 
         sed -i $out/bin/clevis-decrypt-tpm2 -e 's,tpm2_,tpm2 ,'
+
+        copy_bin_and_libs ${pkgs.luksmeta}/bin/luksmeta
+        copy_bin_and_libs ${pkgs.gnused}/bin/sed
+        copy_bin_and_libs ${pkgs.gnugrep}/bin/grep
+        copy_bin_and_libs ${cfg.pagkage}/bin/clevis-luks-common-functions
+        copy_bin_and_libs ${cfg.package}/bin/clevis-luks-unlock
       '';
 
       secrets = lib.mapAttrs'
