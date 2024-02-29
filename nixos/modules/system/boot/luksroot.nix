@@ -478,10 +478,25 @@ let
     }
     ''}
 
+    ${optionalString (clevis.enable && hasAttr dev.name clevis.devices && clevis.devices.${dev.name}.secretFile == null) ''
+    open_with_hardware() {
+      clevis luks unlock -d ${dev.device} -n ${dev.name}
+      if [ $? -ne 0 ]; then
+        echo "clevis-luks unlock failed, falling back to normal open procedure"
+        open_normally
+      fi
+    }
+    ''}
+
     # commands to run right before we mount our device
     ${dev.preOpenCommands}
 
-    ${if (luks.yubikeySupport && (dev.yubikey != null)) || (luks.gpgSupport && (dev.gpgCard != null)) || (luks.fido2Support && fido2luksCredentials != []) then ''
+    ${if
+      (luks.yubikeySupport && (dev.yubikey != null))
+      || (luks.gpgSupport && (dev.gpgCard != null))
+      || (luks.fido2Support && fido2luksCredentials != [])
+      || (clevis.enable && hasAttr dev.name clevis.devices && clevis.devices.${dev.name}.secretFile == null)
+    then ''
     open_with_hardware
     '' else ''
     open_normally
@@ -897,7 +912,7 @@ in
           };
         };
 
-        config = mkIf (clevis.enable && (hasAttr name clevis.devices)) {
+        config = mkIf (clevis.enable && (hasAttr name clevis.devices) && clevis.devices.${name}.secretFile != null) {
           preOpenCommands = mkIf (!systemd.enable) ''
             mkdir -p /clevis-${name}
             mount -t ramfs none /clevis-${name}
@@ -1126,7 +1141,7 @@ in
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
-              ExecStop = "${config.boot.initrd.systemd.package.util-linux}/bin/umount /clevis-${name}";
+              ExecStop = mkIf (clevis.devices.${name}.secretFile != null) "${config.boot.initrd.systemd.package.util-linux}/bin/umount /clevis-${name}";
             };
           })
           devicesWithClevis)
