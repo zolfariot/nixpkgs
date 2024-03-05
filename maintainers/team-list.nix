@@ -342,7 +342,6 @@ with lib.maintainers; {
       imincik
       nh2
       nialov
-      r-burns
       sikmir
       willcohen
     ];
@@ -430,7 +429,6 @@ with lib.maintainers; {
   helsinki-systems = {
     # Verify additions to this team with at least one already existing member of the team.
     members = [
-      ajs124
       das_j
     ];
     scope = "Group registration for packages maintained by Helsinki Systems";
@@ -775,7 +773,6 @@ with lib.maintainers; {
     members = [
       aanderse
       drupol
-      etu
       ma27
       talyz
     ];
