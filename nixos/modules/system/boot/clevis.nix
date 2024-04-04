@@ -24,11 +24,11 @@ in
 
     boot.initrd.clevis.devices = mkOption {
       description = "Encrypted devices that need to be unlocked at boot using Clevis";
-      default = { };
       type = types.attrsOf (types.submodule ({
         options.secretFile = mkOption {
           description = lib.mdDoc "Clevis JWE file used to decrypt the device at boot, in concert with the chosen pin (one of TPM2, Tang server, or SSS).";
-          type = types.path;
+          default = null;
+          type = types.nullOr types.path;
         };
       }));
     };
@@ -46,13 +46,21 @@ in
     # Implementation of clevis unlocking for the supported filesystems are located directly in the respective modules.
 
 
-    assertions = (attrValues (mapAttrs
-      (device: _: {
-        assertion = (any (fs: fs.device == device && (elem fs.fsType supportedFs)) config.system.build.fileSystems) || (hasAttr device config.boot.initrd.luks.devices);
-        message = ''
-          No filesystem or LUKS device with the name ${device} is declared in your configuration.'';
-      })
-      cfg.devices));
+    assertions =
+      (attrValues (mapAttrs
+        (device: _: {
+          assertion = (any (fs: fs.device == device && (elem fs.fsType supportedFs)) config.system.build.fileSystems) || (hasAttr device config.boot.initrd.luks.devices);
+          message = ''
+            No filesystem or LUKS device with the name ${device} is declared in your configuration.'';
+        })
+        cfg.devices)
+      ++ attrValues (mapAttrs
+        (name: device: {
+          assertion = (device.secretFile != null) || (hasAttr name config.boot.initrd.luks.devices);
+          message = ''
+            A secretFile must be declared for the non LUKS device with the name ${name}.'';
+        })
+        cfg.devices));
 
 
     warnings =
@@ -82,14 +90,27 @@ in
         done
 
         sed -i $out/bin/clevis-decrypt-tpm2 -e 's,tpm2_,tpm2 ,'
+
+        copy_bin_and_libs ${pkgs.luksmeta}/bin/luksmeta
+        copy_bin_and_libs ${pkgs.gnused}/bin/sed
+        copy_bin_and_libs ${pkgs.gnugrep}/bin/grep
+        copy_bin_and_libs ${cfg.pagkage}/bin/clevis-luks-common-functions
+        copy_bin_and_libs ${cfg.package}/bin/clevis-luks-unlock
       '';
 
-      secrets = lib.mapAttrs' (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile) cfg.devices;
+      secrets = lib.mapAttrs'
+        (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile)
+        (filterAttrs (name: value: value.secretFile != null) cfg.devices);
 
       systemd = {
         extraBin = mkIf systemd.enable {
           clevis = "${cfg.package}/bin/clevis";
           curl = "${pkgs.curl}/bin/curl";
+          # TODO: make optional if clevis-luks not needed
+          cryptsetup = "${pkgs.cryptsetup}/bin/cryptsetup";
+          luksmeta = "${pkgs.luksmeta}/bin/luksmeta";
+          grep = "${pkgs.gnugrep}/bin/grep";
+          sed = "${pkgs.gnused}/bin/sed"; 
         };
 
         storePaths = mkIf systemd.enable [
